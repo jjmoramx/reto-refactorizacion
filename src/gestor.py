@@ -22,6 +22,9 @@ UMBRAL_DESCUENTO_ALTO = 1000
 TASA_DESCUENTO_ALTO = 0.10
 UMBRAL_DESCUENTO_MEDIO = 500
 TASA_DESCUENTO_MEDIO = 0.05
+PREFIJO_VIP = "VIP"
+MONTO_MINIMO_VIP = 200
+TASA_DESCUENTO_VIP = 0.02
 
 
 def reiniciar_sistema():
@@ -104,6 +107,11 @@ def _calcular_iva(base):
     return base * TASA_IVA
 
 
+def _es_cliente_vip(cliente):
+    """Indica si el codigo de cliente empieza con el prefijo VIP (en mayusculas)."""
+    return cliente is not None and cliente[: len(PREFIJO_VIP)] == PREFIJO_VIP
+
+
 def registrar_venta(codigo, cantidad, cliente=""):
     """Registra una venta completa.
 
@@ -134,13 +142,10 @@ def registrar_venta(codigo, cantidad, cliente=""):
     # calculo del subtotal
     aux = temp2["precio"] * cantidad
     desc = _descuento_por_volumen(aux)
-    # los clientes cuyo codigo empieza con VIP tienen un extra,
-    # pero solo si su compra (ya con descuento) pasa de cierto monto
-    if cliente != "" and cliente is not None:
-        if len(cliente) >= 3:
-            if cliente[0:3] == "VIP":
-                if aux - desc > 200:
-                    desc = desc + aux * 0.02
+    # los clientes VIP tienen un extra, pero solo si su compra
+    # (ya con descuento por volumen) pasa de cierto monto
+    if _es_cliente_vip(cliente) and aux - desc > MONTO_MINIMO_VIP:
+        desc = desc + aux * TASA_DESCUENTO_VIP
     base = aux - desc
     impuesto = _calcular_iva(base)
     total = round(base + impuesto, 2)
