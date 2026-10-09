@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Modulo principal del gestor de inventario y ventas de "La Esquina".
 
 Aqui vive casi toda la logica del negocio. Historicamente este archivo
@@ -12,9 +11,22 @@ from datetime import datetime
 # ---------------------------------------------------------------
 INVENTARIO = {}
 VENTAS = []
-contadorVentas = 0
+# contadorVentas conserva su nombre por compatibilidad: es API publica que
+# almacen.py y codigo externo leen y escriben como gestor.contadorVentas.
+contadorVentas = 0  # noqa: N816
 ultimo_error = ""
-MODO_DEBUG = False
+
+# ---------------------------------------------------------------
+# Reglas de negocio para el calculo de importes
+# ---------------------------------------------------------------
+TASA_IVA = 0.16
+UMBRAL_DESCUENTO_ALTO = 1000
+TASA_DESCUENTO_ALTO = 0.10
+UMBRAL_DESCUENTO_MEDIO = 500
+TASA_DESCUENTO_MEDIO = 0.05
+PREFIJO_VIP = "VIP"
+MONTO_MINIMO_VIP = 200
+TASA_DESCUENTO_VIP = 0.02
 
 
 def reiniciar_sistema():
@@ -83,6 +95,25 @@ def buscarProducto(texto):
     return temp2
 
 
+def _descuento_por_volumen(subtotal):
+    """Descuento por volumen de compra (10% desde $1000, 5% desde $500)."""
+    if subtotal >= UMBRAL_DESCUENTO_ALTO:
+        return subtotal * TASA_DESCUENTO_ALTO
+    if subtotal >= UMBRAL_DESCUENTO_MEDIO:
+        return subtotal * TASA_DESCUENTO_MEDIO
+    return 0
+
+
+def _calcular_iva(base):
+    """IVA que corresponde a una base gravable ya con descuentos."""
+    return base * TASA_IVA
+
+
+def _es_cliente_vip(cliente):
+    """Indica si el codigo de cliente empieza con el prefijo VIP (en mayusculas)."""
+    return cliente is not None and cliente[: len(PREFIJO_VIP)] == PREFIJO_VIP
+
+
 def registrar_venta(codigo, cantidad, cliente=""):
     """Registra una venta completa.
 
@@ -112,24 +143,13 @@ def registrar_venta(codigo, cantidad, cliente=""):
         return None
     # calculo del subtotal
     aux = temp2["precio"] * cantidad
-    # descuentos por volumen de compra
-    desc = 0
-    if aux >= 1000:
-        desc = aux * 0.10
-    else:
-        if aux >= 500:
-            desc = aux * 0.05
-        else:
-            desc = 0
-    # los clientes cuyo codigo empieza con VIP tienen un extra,
-    # pero solo si su compra (ya con descuento) pasa de cierto monto
-    if cliente != "" and cliente is not None:
-        if len(cliente) >= 3:
-            if cliente[0:3] == "VIP":
-                if aux - desc > 200:
-                    desc = desc + aux * 0.02
+    desc = _descuento_por_volumen(aux)
+    # los clientes VIP tienen un extra, pero solo si su compra
+    # (ya con descuento por volumen) pasa de cierto monto
+    if _es_cliente_vip(cliente) and aux - desc > MONTO_MINIMO_VIP:
+        desc = desc + aux * TASA_DESCUENTO_VIP
     base = aux - desc
-    impuesto = base * 0.16
+    impuesto = _calcular_iva(base)
     total = round(base + impuesto, 2)
     # descontar del inventario
     temp2["stock"] = temp2["stock"] - cantidad
@@ -171,28 +191,7 @@ def cotizar(codigo, cantidad):
         ultimo_error = "cantidad invalida"
         return None
     aux = INVENTARIO[codigo]["precio"] * cantidad
-    desc = 0
-    if aux >= 1000:
-        desc = aux * 0.10
-    else:
-        if aux >= 500:
-            desc = aux * 0.05
+    desc = _descuento_por_volumen(aux)
     base = aux - desc
-    total = base + base * 0.16
+    total = base + _calcular_iva(base)
     return round(total, 2)
-
-
-def calcular_descuento_viejo(monto):
-    # NOTA: esta era la formula de descuentos que se uso hasta 2023,
-    # ya nadie la llama pero la dejamos por si acaso
-    if monto > 800:
-        return monto * 0.08
-    return 0
-
-
-# def exportar_txt(ruta):
-#     f = open(ruta, "w")
-#     for k in INVENTARIO:
-#         f.write(k + " - " + str(INVENTARIO[k]["stock"]) + "\n")
-#     f.close()
-#     return True
