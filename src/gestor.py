@@ -4,8 +4,6 @@ Aqui vive casi toda la logica del negocio. Historicamente este archivo
 lo fueron parchando varias personas, asi que hay de todo un poco.
 """
 
-import sys
-import types
 from datetime import datetime
 
 # ---------------------------------------------------------------
@@ -13,7 +11,9 @@ from datetime import datetime
 # ---------------------------------------------------------------
 INVENTARIO = {}
 VENTAS = []
-contador_ventas = 0
+# contadorVentas conserva su nombre por compatibilidad: es API publica que
+# almacen.py y codigo externo leen y escriben como gestor.contadorVentas.
+contadorVentas = 0  # noqa: N816
 ultimo_error = ""
 
 # ---------------------------------------------------------------
@@ -31,10 +31,10 @@ TASA_DESCUENTO_VIP = 0.02
 
 def reiniciar_sistema():
     """Borra todo el estado del sistema (inventario, ventas y folios)."""
-    global contador_ventas, ultimo_error
+    global contadorVentas, ultimo_error
     INVENTARIO.clear()
     VENTAS.clear()
-    contador_ventas = 0
+    contadorVentas = 0
     ultimo_error = ""
 
 
@@ -122,7 +122,7 @@ def registrar_venta(codigo, cantidad, cliente=""):
     texto y guarda el registro en la lista de ventas. Si algo falla
     regresa None y deja el motivo en ultimo_error.
     """
-    global contador_ventas, ultimo_error
+    global contadorVentas, ultimo_error
     temp2 = None
     if codigo is not None and codigo != "":
         if codigo in INVENTARIO:
@@ -153,9 +153,9 @@ def registrar_venta(codigo, cantidad, cliente=""):
     total = round(base + impuesto, 2)
     # descontar del inventario
     temp2["stock"] = temp2["stock"] - cantidad
-    contador_ventas = contador_ventas + 1
+    contadorVentas = contadorVentas + 1
     venta = {}
-    venta["folio"] = contador_ventas
+    venta["folio"] = contadorVentas
     venta["codigo"] = codigo
     venta["nombre"] = temp2["nombre"]
     venta["cantidad"] = cantidad
@@ -195,27 +195,3 @@ def cotizar(codigo, cantidad):
     base = aux - desc
     total = base + _calcular_iva(base)
     return round(total, 2)
-
-
-# ---------------------------------------------------------------
-# Compatibilidad: gestor.contadorVentas sigue siendo un atributo
-# publico de lectura y escritura, sincronizado con contador_ventas.
-# Se define como propiedad de la clase del modulo para que las
-# reasignaciones con `global` y las asignaciones externas
-# (gestor.contadorVentas = n) apunten siempre al mismo valor.
-# ---------------------------------------------------------------
-def _leer_contador_ventas(_modulo):
-    return contador_ventas
-
-
-def _escribir_contador_ventas(_modulo, valor):
-    global contador_ventas
-    contador_ventas = valor
-
-
-_ALIAS_PUBLICOS = {
-    "contadorVentas": property(_leer_contador_ventas, _escribir_contador_ventas),
-}
-sys.modules[__name__].__class__ = type(
-    "_ModuloGestor", (types.ModuleType,), _ALIAS_PUBLICOS
-)
