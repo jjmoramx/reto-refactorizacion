@@ -49,4 +49,5 @@ guiones del menú siguen idénticos.
 
 ## Reflexión final
 
-*(Pendiente: se completará al terminar todas las refactorizaciones.)*
+Ver [`docs/reflexion.md`](reflexion.md). La sección personal está marcada
+**[COMPLETAR POR EL ALUMNO]**.
