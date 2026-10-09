@@ -1,0 +1,12 @@
+# Entornos virtuales
+.venv/
+venv/
+
+# Cachés y bytecode
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Control de versiones
+.git/
