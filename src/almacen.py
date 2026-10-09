@@ -11,7 +11,7 @@ def guardar_datos(ruta):
     d = {}
     d["inventario"] = gestor.INVENTARIO
     d["ventas"] = gestor.VENTAS
-    d["contador"] = gestor.contadorVentas
+    d["contador"] = gestor.contador_ventas
     with open(ruta, "w", encoding="utf-8") as f:
         json.dump(d, f, indent=2, ensure_ascii=False)
     return True
@@ -37,7 +37,7 @@ def cargar_datos(ruta):
     gestor.VENTAS.clear()
     for v in d["ventas"]:
         gestor.VENTAS.append(v)
-    gestor.contadorVentas = d.get("contador", 0)
+    gestor.contador_ventas = d.get("contador", 0)
     return True
 
 
@@ -47,7 +47,7 @@ def hay_archivo(ruta):
 
 
 def __getattr__(nombre):
-    # alias de compatibilidad: main.py todavia llama a almacen.hayArchivo
+    # alias de compatibilidad para codigo que aun llame a almacen.hayArchivo
     if nombre == "hayArchivo":
         return hay_archivo
     raise AttributeError(f"module {__name__!r} has no attribute {nombre!r}")
