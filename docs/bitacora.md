@@ -1,7 +1,7 @@
 # Bitácora de refactorización
 
-**Nombre:**
-**Matrícula:**
+**Nombre:** José Javier Mora Moreno\
+**Matrícula:** No aplica\
 **Fecha:** 2026-10-08
 
 Registro de cada refactorización realizada con Claude Code. Después de cada
@@ -49,5 +49,5 @@ guiones del menú siguen idénticos.
 
 ## Reflexión final
 
-Ver [`docs/reflexion.md`](reflexion.md). La sección personal está marcada
-**[COMPLETAR POR EL ALUMNO]**.
+Ver [`docs/reflexion.md`](reflexion.md), que incluye la reflexión técnica y la
+reflexión personal (sección 8).

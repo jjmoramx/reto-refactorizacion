@@ -1,10 +1,8 @@
 # Reflexión técnica: refactorización asistida por IA
 
-> Este documento resume hechos verificables del proceso (comandos, cifras,
-> decisiones registradas en `docs/bitacora.md` y en el historial de git).
-> Las secciones marcadas con **[COMPLETAR POR EL ALUMNO]** requieren la
-> experiencia y opinión personal de quien entrega el reto y no deben
-> rellenarse con texto generado.
+> Las secciones 1 a 7 resumen hechos verificables del proceso (comandos,
+> cifras, decisiones registradas en `docs/bitacora.md` y en el historial de
+> git). La sección 8 es la reflexión personal del alumno.
 
 ## 1. Punto de partida
 
@@ -113,14 +111,20 @@
 - Commits atómicos y una bitácora con resultados reales permiten auditar y
   revertir cada paso de forma independiente.
 
-## 8. Reflexión personal **[COMPLETAR POR EL ALUMNO]**
+## 8. Reflexión personal
 
-Responder con experiencia propia (10-15 líneas, según el README):
-
-- ¿Qué tan útil fue Claude Code para detectar y corregir los problemas?
-  **[COMPLETAR]**
-- ¿Qué propuso la IA que no habías notado? **[COMPLETAR]**
-- ¿En qué casos tuviste que corregir o rechazar sus sugerencias? (p. ej. la
-  decisión sobre `contadorVentas`, la ubicación de la bitácora o el nombre de
-  la rama) **[COMPLETAR]**
-- ¿Qué aprendiste sobre refactorizar con apoyo de IA? **[COMPLETAR]**
+Claude Code me resultó útil para diagnosticar el proyecto: relacionó los 20 errores iniciales de Ruff
+con *code smells* concretos y propuso un orden de refactorización de menor a mayor riesgo, hasta
+terminar con 20 de 20 tests aprobados y 0 errores de Ruff. Lo más valioso fue no limitarse a los
+tests: en cada cambio se comparó la versión anterior con la nueva mediante scripts temporales (2640
+combinaciones en R2, 2964 ventas en R3, 22 escenarios de archivos en R4 y 15 guiones del menú en R5).
+El análisis permitió identificar diferencias de comportamiento que debían conservarse: `cotizar` no
+aplica el descuento VIP y valida en otro orden que `registrar_venta`; cambiar `str(float)` por `:.2f`
+o simplificar las fórmulas alteraría la salida, y la versión original dejaba un archivo abierto si
+fallaba el guardado. Tuve que acotar y corregir sus propuestas: en R4 restringí los cambios para no
+tocar `gestor.py`, y en R5 resolvió `contadorVentas` cambiando la clase del módulo con `type(...)` y
+`property`; funcionaba, pero en la auditoría lo consideré demasiado complejo y elegí un `# noqa: N816`
+localizado y documentado. Además, decidí la ubicación de la bitácora y el nombre de la rama. Aprendí
+que pasar los tests no garantiza un comportamiento idéntico cuando la cobertura es parcial, que dejar
+Ruff sin errores no justifica soluciones difíciles de mantener, y que revisar cada diff, hacer commits
+atómicos y registrar resultados reales me permite responder por el trabajo de la IA.
